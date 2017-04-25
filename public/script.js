@@ -66,7 +66,7 @@ $('#permute-in-main').on('click', function(event) {
  * When the calculate-in-web-worker button is clicked,
  * calculcate the permutations in a web worker.
  */
-$('#permutate-in-web-worker').on('click', function(event){
+$('#permute-in-web-worker').on('click', function(event){
   event.preventDefault();
 
   // Perform preparations
@@ -74,11 +74,19 @@ $('#permutate-in-web-worker').on('click', function(event){
   $('#permutation-message').text("Calculating in web worker...");
 
   // TODO: Calculate permutations using a web worker
+  var worker = new Worker('permutations.js');
+  worker.postMessage($('#n').val());
+  worker.onmessage = function(event){
+    event.data.forEach(function(perm){
+      $('<li>').text(perm).appendTo('#permutation-results');
+    });
+  }
 })
 
 
-$('#image-chunk-list > img').on('click', function(event){
+$('#image-list > img').on('click', function(event){
   event.preventDefault();
+  var image = this;
   // Create a canvas the same size as the image
   var canvas = document.createElement('canvas');
   canvas.width = this.width;
@@ -90,4 +98,10 @@ $('#image-chunk-list > img').on('click', function(event){
   // Get the image pixel data
   var data = ctx.getImageData(0, 0, canvas.width, canvas.height);
   // TODO: Process Data
-})
+  var worker = new Worker('image-chunks.js');
+  worker.postMessage(data);
+  worker.onmessage = function(event) {
+    ctx.putImageData(event.data, 0, 0);
+    image.src = canvas.toDataURL();
+  }
+});
